@@ -1,4 +1,4 @@
-<img width="824" height="787" alt="image" src="https://github.com/user-attachments/assets/49804d25-4a70-40d9-afca-42151b8b1369" /># FanSee
+# FanSee
 
 Coolest repo ever
 
