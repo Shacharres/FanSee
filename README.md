@@ -2,11 +2,30 @@
 
 Coolest repo ever
 
+
+## Equipment
+
+[Sheet](https://docs.google.com/spreadsheets/d/1Zy9j_o3g-Kl9qhsYbI6PPVg-8WaA3Wd_451FoOYFjiQ/edit?gid=0#gid=0)
+
+
 ## Axis system:
 <img width="394" height="257" alt="image" src="https://github.com/user-attachments/assets/a283521f-3a21-434f-82c8-31523cff3a88" />
 
 
-
 ## Ardu TOF cam setup: 
 [HW](https://docs.arducam.com/Raspberry-Pi-Camera/Tof-camera/Getting-Started/#hardware-connection-on-pi4)
+
 [SW](https://docs.arducam.com/Raspberry-Pi-Camera/Tof-camera/Point-Cloud-With-Arducam-ToF-Camera/#about-point-cloud)
+
+## Lepton Thermal Camera Module - LWIR
+[Official Datasheets](https://groupgets.com/products/flir-lepton-3-5)
+
+[Google Forum](groups.google.com/d/forum/flir-lepton)
+
+[Git - LePi #1](https://github.com/cosmac/LePi)
+
+[Git - Image Capture Code #2](https://github.com/groupgets/LeptonModule)
+
+[Git - HW project w/LWIR #3](https://github.com/danjulio/tCam/tree/main)
+
+[Module Datasheet](https://drive.google.com/file/d/0B3wmCw6bdPqFblZsZ3l4SXM4R28/view?resourcekey=0-zLby_23KmQ7k8VHMI_50wQ)
