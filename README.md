@@ -2,9 +2,14 @@
 
 Coolest repo ever
 
+
 ## Equipment
 
 [Sheet](https://docs.google.com/spreadsheets/d/1Zy9j_o3g-Kl9qhsYbI6PPVg-8WaA3Wd_451FoOYFjiQ/edit?gid=0#gid=0)
+
+
+## Axis system:
+<img width="394" height="257" alt="image" src="https://github.com/user-attachments/assets/a283521f-3a21-434f-82c8-31523cff3a88" />
 
 
 ## Ardu TOF cam setup: 
