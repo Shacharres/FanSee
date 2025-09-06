@@ -2,6 +2,10 @@
 
 Coolest repo ever
 
+## Equipment
+
+[Sheet](https://docs.google.com/spreadsheets/d/1Zy9j_o3g-Kl9qhsYbI6PPVg-8WaA3Wd_451FoOYFjiQ/edit?gid=0#gid=0)
+
 
 ## Ardu TOF cam setup: 
 [HW](https://docs.arducam.com/Raspberry-Pi-Camera/Tof-camera/Getting-Started/#hardware-connection-on-pi4)
