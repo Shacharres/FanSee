@@ -17,7 +17,13 @@ FAN_SERVO_PIN = 17
 # ================================================
 # PH
 # I2C address
-
+# image size
+THERMAL_H = 24
+THERMAL_W = 32
+# frame rate
+THERMAL_FRAME_RATE = 4
+# lowermost temp to consider
+THERMAL_MIN_TEMP = 20
 
 
 # ================================================
