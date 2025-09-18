@@ -15,16 +15,15 @@ def take_image(verbose=False, flag_debug_save_image=False):
         print("Captured frame shape:", frame.shape)
 
     if flag_debug_save_image:
-        cv2.imwrite("image.jpg", frame)   
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        cv2.imwrite("image.jpg", frame_bgr)   # save the converted frame
         print("Picture saved as image.jpg")
 
     return frame
 
+
 if __name__ == "__main__":
-    take_image(False,True)
-
-
-
+    take_image(verbose=False, flag_debug_save_image=True)
 
 
 
