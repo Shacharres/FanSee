@@ -12,11 +12,10 @@ KNOWN_GESTURES_NAMES = ["None", "Closed_Fist", "Open_Palm", "Pointing_Up", "Thum
 
 def init_gesture_recognizer(model_path: str) -> vision.GestureRecognizer: # type: ignore
     """Initializes the gesture recognizer with the given model path."""
-    if not os.path.isfile(model_path):
-        os.system("!wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task")
-        raise SystemExit("Downloaded the model file. Please move it to the correct directory and rerun the script.")
+    if not os.path.isfile(os.path.abspath(model_path)):
+        raise IOError(f"Model file not found at {model_path}")
    
-    base_options = python.BaseOptions(model_asset_path=model_path)
+    base_options = python.BaseOptions(model_asset_path=os.path.abspath(model_path))
     options = vision.GestureRecognizerOptions(base_options=base_options)
     recognizer = vision.GestureRecognizer.create_from_options(options)
     return recognizer
