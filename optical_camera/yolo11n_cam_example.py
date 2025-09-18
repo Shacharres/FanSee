@@ -1,11 +1,16 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from ultralytics import YOLO
 import cv2
+import config
 
-# Load model (nano version)
+
 model = YOLO("yolo11n.pt")
 
 # Open camera (IMX219 is usually /dev/video0)
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(config.RGB_CAM_ID)
 
 frame_count = 0
 while cap.isOpened():
