@@ -35,3 +35,9 @@ RGB_CAM_ID = 0
 # Camera TOF
 # ================================================
 # PH
+
+# ================================================
+# Stabilizer
+# ================================================
+STABILIZER_N_FRAMES = 50  # number of frames to consider
+STABILIZER_M_FRAMES = 10  # number of frames to trigger action
