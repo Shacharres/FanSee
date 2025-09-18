@@ -20,6 +20,8 @@ def take_image(verbose=False, flag_debug_save_image=False):
 
     return frame
 
+if __name__ == "__main__":
+    take_image(False,True)
 
 
 
