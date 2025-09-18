@@ -12,10 +12,10 @@ KNOWN_GESTURES_NAMES = ["None", "Closed_Fist", "Open_Palm", "Pointing_Up", "Thum
 
 def init_gesture_recognizer(model_path: str) -> vision.GestureRecognizer: # type: ignore
     """Initializes the gesture recognizer with the given model path."""
-    if not os.path.isfile(os.path.abspath(model_path)):
+    if not os.path.isfile(model_path):
         raise IOError(f"Model file not found at {model_path}")
    
-    base_options = python.BaseOptions(model_asset_path=os.path.abspath(model_path))
+    base_options = python.BaseOptions(model_asset_path=model_path)
     options = vision.GestureRecognizerOptions(base_options=base_options)
     recognizer = vision.GestureRecognizer.create_from_options(options)
     return recognizer
@@ -35,14 +35,14 @@ def get_gesture_prediction(recognizer: vision.GestureRecognizer, image_path: str
     return top_gesture.category_name, top_gesture.score
 
 
-def get_is_wave_gesture(recognizer: vision.GestureRecognizer, image_path: str = None, image_matrix=None, conf_threshold: float = 0.5) -> bool: # type: ignore
+def is_wave_gesture(recognizer: vision.GestureRecognizer, image_path: str = None, image_matrix=None, conf_threshold: float = 0.5) -> bool: # type: ignore
     """Checks if the gesture in the image is a wave gesture."""
     gesture_name, score = get_gesture_prediction(recognizer, image_path, image_matrix)
     return gesture_name == "Open_Palm" and score > conf_threshold
 
 
 if __name__ == "__main__":
-    model_path = './optical_camera/gesture_recognizer.task'
+    model_path = os.path.abspath('./optical_camera/gesture_recognizer.task')
    # Create a GestureRecognizer object.
     recognizer = init_gesture_recognizer(model_path)
     IMAGE_FILENAMES = ['thumbs_down.jpg', 'victory.jpg', 'thumbs_up.jpg', 'pointing_up.jpg']
