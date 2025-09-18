@@ -29,8 +29,12 @@ THERMAL_MIN_TEMP = 20
 # ================================================
 # Camera RGB
 # ================================================
-RGB_CAM_ID = 0
-
+OPTICAL_CAM_ID = 0
+OPTICAL_H = 480 
+OPTICAL_W = 640 
+OPTICAL_YOLO_MODEL = "yolo11n.pt"  
+OPTICAL_IS_PERSON_YOLO_THR = 0.5  # confidence threshold for person detection
+OPTICAL_YOLO_WH = 320  # width/height for YOLO model input size
 # ================================================
 # Camera TOF
 # ================================================
