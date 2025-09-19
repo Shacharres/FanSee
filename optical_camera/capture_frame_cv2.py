@@ -84,14 +84,16 @@ def capture_frame(d_state, verbose=False, flag_debug_save_image=False):
         print("Captured frame shape:", frame_bgr.shape)
 
     if flag_debug_save_image and frame_rgb is not None:
-        cv2.imwrite("captured_frame.jpg", frame_rgb)
-        print("Picture saved as captured_frame.jpg")
+        cv2.imwrite("captured_frame_MS.jpg", frame_rgb)
+        print("Picture saved as captured_frame1800.jpg")
 
     return frame_bgr, frame_rgb, d_state
 
 
 if __name__ == "__main__":
-    _, frame_rgb, _ = capture_frame(d_state={}, verbose=True, flag_debug_save_image=True)
+    d_state = {'failed_capture_counter': 0}
+    d_state = init_camera(d_state)
+    _, frame_rgb, _ = capture_frame(d_state=d_state, verbose=True, flag_debug_save_image=True)
     if frame_rgb is not None:
         print("Frame captured successfully")
     else:

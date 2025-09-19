@@ -5,7 +5,7 @@ from mediapipe.tasks.python import vision
 import os
 import cv2
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 KNOWN_GESTURES_NAMES = ["None", "Closed_Fist", "Open_Palm", "Pointing_Up", "Thumb_Down", "Thumb_Up", "Victory", "ILoveYou"]
 
@@ -27,21 +27,23 @@ def get_gesture_prediction(recognizer: vision.GestureRecognizer, history: list, 
     if image_path is None and image_matrix is None:
         raise ValueError("Either image_path or image_matrix must be provided.")
     if image_matrix is not None:
+        image_matrix = np.ascontiguousarray(image_matrix, dtype=np.uint8)
         image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_matrix)
     else:
         image = mp.Image.create_from_file(image_path)
     recognition_result = recognizer.recognize(image)
     if not recognition_result or not recognition_result.gestures:
-        top_gesture = {'category_name': 'None', 'score': -1}
+        history = ["None"] + history[:-1]  # update history
+        return history[0], -1
     else:
         top_gesture = recognition_result.gestures[0][0]
-    history = [top_gesture.category_name] + history[:-1]  # update history
-    return top_gesture.category_name, top_gesture.score
+        history = [top_gesture.category_name] + history[:-1]  # update history
+        return top_gesture.category_name, top_gesture.score
 
 
 def is_wave_gesture(recognizer: vision.GestureRecognizer, history: list, image_path: str = None, image_matrix=None, conf_threshold: float = 0.5) -> bool: # type: ignore
     """Checks if the gesture in the image is a wave gesture."""
-    gesture_name, score = get_gesture_prediction(recognizer, image_path, image_matrix)
+    gesture_name, score = get_gesture_prediction(recognizer, history, image_path=image_path, image_matrix=image_matrix)
     return gesture_name == "Open_Palm" and score > conf_threshold
 
 

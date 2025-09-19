@@ -30,8 +30,11 @@ THERMAL_MIN_TEMP = 20
 # Camera RGB
 # ================================================
 OPTICAL_CAM_ID = 0
-OPTICAL_H = 480 
-OPTICAL_W = 640 
+# Mode 1: 3280×2464 full FOV (still capture)
+# Mode 2: 1920×1080 cropped FOV (video-friendly)
+# Mode 3: 1640×1232 (binned, wide FOV)
+OPTICAL_W = 1640
+OPTICAL_H = 1232
 OPTICAL_INIT_CAM_WARMUP = 2 
 OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH = 5
 

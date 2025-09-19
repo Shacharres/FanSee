@@ -1,5 +1,7 @@
 import os
 import config
+import traceback
+
 from stabilizer import init_stabilizer, update_buffer, get_stable_boxes
 from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_gesture, is_exit_sequence
 from optical_camera.capture_frame_cv2 import capture_frame, init_camera
@@ -20,7 +22,8 @@ def init(d_state: dict = None):
         'thermal_camera': init_thermal_camera(config.THERMAL_FRAME_RATE, (config.THERMAL_H, config.THERMAL_W)),
         'history': init_stabilizer(config.STABILIZER_N_FRAMES),
         'picam': None,
-        'failed_capture_counter': 0
+        'failed_capture_counter': 0,
+        'loop_counter': 0
     }
     init_camera(d_state)
     d_state = init_brain_state(config, d_state=d_state)
@@ -40,7 +43,7 @@ def cleanup(d_state):
     except Exception as e:
         print(f"Error cleaning up thermal camera: {e}")
     # fan
-    set_fan_speed(Speed.OFF)
+    set_fan_speed(Speed.STOP)
 
     d_state['isInitalized'] = False
     print("Cleanup successful.")
@@ -49,9 +52,12 @@ def cleanup(d_state):
 def main():
     # init HW
     d_state = init()
+    print("after init")
     # main loop:
     while True:
         try:
+            d_state['loop_counter'] += 1
+            print(f"Loop idx = {d_state['loop_counter']}")
             # (1) capture image
             frame_bgr, frame_rgb, d_state = capture_frame(d_state)
 
@@ -92,13 +98,12 @@ def main():
 
             # call controller w commands 
 
-
         except Exception as e:
-            print(f"Error occurred: {e}")
+            print(f"Error occurred: {e}; {traceback.format_exc()}")
+            break
 
-        finally:
-            # cleanup and HW studown
-            cleanup(d_state)
+    # cleanup and HW studown
+    cleanup(d_state)
     
 
 

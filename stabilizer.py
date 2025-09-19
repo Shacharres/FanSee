@@ -83,7 +83,7 @@ def is_box_within_stable_cell(box: list[int], stable_cells: np.ndarray) -> bool:
 def get_stable_boxes(history: np.ndarray, current_frame_boxes: list[list[int]], threshold: int) -> list[list[int]]:
     """ Returns the boxes from the current frame that should be considered as fan candidates since they are in stable areas. """
     to_consider = get_stable_cells(history, threshold)
-    if not np.any(to_consider): return []
+    if not np.any(to_consider): return [], []
     stable_boxes = []
     for box in current_frame_boxes:
         if is_box_within_stable_cell(box, to_consider):
