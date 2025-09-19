@@ -8,6 +8,7 @@ within the last N frames. The controller would then only react to cells that hav
 import numpy as np
 
 import config
+from utils import get_center_pixels
 
 
 grid_size = config.OPTICAL_H // 10, config.OPTICAL_W // 10
@@ -87,7 +88,8 @@ def get_stable_boxes(history: np.ndarray, current_frame_boxes: list[list[int]], 
     for box in current_frame_boxes:
         if is_box_within_stable_cell(box, to_consider):
             stable_boxes.append(box)
-    return stable_boxes
+    stable_centers = get_center_pixels(stable_boxes)
+    return stable_boxes, stable_centers
 
 
 if __name__ == "__main__":
