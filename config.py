@@ -10,7 +10,7 @@ FAN_SPEED_1_PIN = 24
 FAN_SPEED_2_PIN = 23
 FAN_SPEED_3_PIN = 22
 FAN_MIST_PIN = 27
-FAN_SERVO_PIN = 17
+FAN_SERVO_PIN = 12
 
 # ================================================
 # Camera Thermal
@@ -51,8 +51,8 @@ OPTICAL_IS_PERSON_YOLO_THR = 0.5  # confidence threshold for person detection
 # ================================================
 # Stabilizer
 # ================================================
-STABILIZER_N_FRAMES = 50  # number of frames to consider
-STABILIZER_M_FRAMES = 10  # number of frames to trigger action
+STABILIZER_N_FRAMES = 30  # number of frames to consider
+STABILIZER_M_FRAMES = 2  # number of frames to trigger action
 
 
 # ================================================

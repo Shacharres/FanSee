@@ -9,7 +9,7 @@ from optical_camera.YOLO_detect_ppl import detect_people
 from optical_camera.detect_distance import init_distance_detector, detect_distance
 from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
 from AI.brainless import get_implement_commands, init_brain_state, propagate_priority, switch_target
-from HW_control.fan_control import set_fan_speed, set_servo_angle, Speed
+from HW_control.fan_control import set_fan_speed, Speed, apply_target_control
 
 
 def init(d_state: dict = None):
@@ -93,7 +93,6 @@ def main():
             
             # (4) AI brain to decide commands
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
-                # TODO: ADD here graceful shutdown of HW   ---- not needed - handled in cleanup()
                 print("Exit sequence detected. Exiting...")
                 break
 
@@ -103,7 +102,7 @@ def main():
             print(d_commands)
 
             # call controller w commands 
-            # process_target(target: dict)
+            apply_target_control(target = d_commands)
         except Exception as e:
             print(f"Error occurred: {e}; {traceback.format_exc()}")
             break

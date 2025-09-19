@@ -1,4 +1,3 @@
-
 # ============================================================
 # bootstrap repo root before other imports
 import subprocess, sys, os
@@ -17,11 +16,10 @@ def add_git_root_to_path():
         raise RuntimeError("Not inside a Git repository")
 
 add_git_root_to_path()
-# ============================================================ 
+# ============================================================
 
-from gpiozero import OutputDevice, Servo, AngularServo
-import config 
-
+from gpiozero import OutputDevice, Servo
+import config
 from enum import Enum
 
 class Speed(Enum):
@@ -30,60 +28,111 @@ class Speed(Enum):
     MIDDLE = 3
     HIGH = 4
 
+# ================= CONSTS =================
+SERVO_MAX_PULSE_LEFT = 0.002
+SERVO_MIN_PULSE_RIGHT = 0.0014
+SERVO_PULSE_MID = 0.0016
 
-
-
-#CONSTS
-SERVO_MIDDLE = 40
-
-
-
-# Initialize relays for fan speeds and misting
+# ================= INITIALIZE HARDWARE =================
 relay_speed1 = OutputDevice(config.FAN_SPEED_1_PIN)
 relay_speed2 = OutputDevice(config.FAN_SPEED_2_PIN)
 relay_speed3 = OutputDevice(config.FAN_SPEED_3_PIN)
 relay_mist = OutputDevice(config.FAN_MIST_PIN)
-# set all rellays off (normaly close when  high)
+
+# Set all relays off (normally closed when HIGH)
 relay_speed1.on()
 relay_speed2.on()
 relay_speed3.on()
 relay_mist.on()
 
-# Initialize servo 
-servo = AngularServo(config.FAN_SERVO_PIN, min_angle=-180, max_angle=180) #servo has off set
-servo.angle = 0
+servo = Servo(config.FAN_SERVO_PIN)
 
-def set_mist(mist_enable):
-    if mist_enable:
-        relay_mist.off()
+# ================= HELPER FUNCTIONS =================
+def lerp(a, b, t):
+    return a + (b - a) * t
+
+def interpolate_three(x, x0, y0, x1, y1, x2, y2):
+    """Piecewise linear interpolation through 3 points."""
+    if x <= x1:
+        t = (x - x0) / (x1 - x0)
+        return lerp(y0, y1, t)
     else:
-        relay_mist.on()
+        t = (x - x1) / (x2 - x1)
+        return lerp(y1, y2, t)
 
-def set_servo_angle(angle):
-    servo.angle = angle
+def set_servo_from_pixel(x_pixel):
+    """Map pixel position to servo pulse using camera width from config."""
+    x_min = 0
+    x_max = config.OPTICAL_W
+    x_mid = x_max / 2
+
+    # Map x_pixel to normalized range [-1, 1]
+    norm_val = interpolate_three(x_pixel, x_min, -1, x_mid, 0, x_max, 1)
+
+    # Map normalized value to servo pulse
+    servo_pulse_len = interpolate_three(
+        norm_val,
+        -1, SERVO_MIN_PULSE_RIGHT,
+         0, SERVO_PULSE_MID,
+         1, SERVO_MAX_PULSE_LEFT
+    )
+    servo.pulse_width = servo_pulse_len
 
 def set_fan_speed(speed):
-    if speed.value > Speed.STOP.value:
-        relay_speed1.off()
-    else:
-        relay_speed1.on()
-    if speed.value > Speed.LOW.value:
-        relay_speed2.off()
-    else:
-        relay_speed2.on()
-    if speed.value > Speed.MIDDLE.value:
-        relay_speed3.off()
-    else:
-        relay_speed3.on()
+    if isinstance(speed, Speed):
+        speed = speed.value
+    relay_speed1.off() if speed > Speed.STOP.value else relay_speed1.on()
+    relay_speed2.off() if speed > Speed.LOW.value else relay_speed2.on()
+    relay_speed3.off() if speed > Speed.MIDDLE.value else relay_speed3.on()
 
+def set_mist(mist_enable: bool):
+    relay_mist.off() if mist_enable else relay_mist.on()
 
+# ================= MAIN CONTROL FUNCTION =================
+def apply_target_control(target: dict):
+    """
+    Apply hardware control based on target dictionary:
+    {
+        'x_pixel': int,
+        'fan_speed': Speed,
+        'prt_bin': int,        # optional, can be used for logging or extra logic
+        'prt_temp': float,     # optional
+        'mist_enable': bool
+    }
+    """
+    x_pixel = target.get('x_pixel', config.OPTICAL_W // 2)
+    fan_speed = target.get('fan_speed', Speed.STOP)
+    mist_enable = target.get('mist_enable', False)
+
+    print('x_pixel:', x_pixel)
+
+    set_servo_from_pixel(x_pixel)
+    set_fan_speed(fan_speed)
+    set_mist(mist_enable)
+
+    # Optional: log or use prt_bin/prt_temp for other actions
+    prt_bin = target.get('prt_bin', None)
+    prt_temp = target.get('prt_temp', None)
+    # For example, could implement temperature-based fan override here
+    # print(f"Bin: {prt_bin}, Temp: {prt_temp}")
+
+# ================= TEST / MAIN LOOP =================
 if __name__ == "__main__":
-    
-    # relay_mist.off()
-    set_servo_angle(SERVO_MIDDLE+40)
+    set_servo_from_pixel(320)  # center
     set_fan_speed(Speed.STOP)
-    print(servo.angle)
-    while(True):
+    set_mist(False)
+    
+    # Example usage
+    target_example = {
+        'x_pixel': 450,
+        'fan_speed': Speed.MIDDLE,
+        'prt_bin': 2,
+        'prt_temp': 45.0,
+        'mist_enable': True
+    }
+
+    apply_target_control(target_example)
+    print("Servo pulse:", servo.pulse_width)
+    
+    while True:
         pass
-
-

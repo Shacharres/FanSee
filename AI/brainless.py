@@ -169,9 +169,9 @@ def get_implement_commands(d_targets, d_state):
     max_temps      = d_state.get('max_temp')
     if current_target:
         idx = current_target['index']
-        x_pixel = d_targets['centers'][idx]
+        x_pixel = d_targets['centers'][idx][1]
         prt_bin = priority_bins[idx] if idx < len(priority_bins) else 0
-        prt_temp = max_temps[idx] if idx < len(max_temps) else 0
+        prt_temp = max_temps[idx] if max_temps and idx < len(max_temps) else 0
         fan_speed = 1 # TODO: assign it in smart way (dist?)
         mist_enable = False # TODO: assign it in smart way 
         return {'x_pixel': x_pixel, 
