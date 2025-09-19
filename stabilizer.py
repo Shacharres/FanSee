@@ -26,10 +26,12 @@ def update_buffer(history: np.ndarray, current_boxes: list[list[int]]) -> np.nda
     for box in current_boxes:
         x1, y1, x2, y2 = box
         relevant_bounds = np.round(np.array([x1, x2, y1, y2]) / 10).astype(int)
-        for y in range(relevant_bounds[2], np.min([relevant_bounds[3] + 1, grid_size[0]])):
-            for x in range(relevant_bounds[0], np.min([relevant_bounds[1] + 1, grid_size[1]])):
-                # if 0 <= y < grid_size[0] and 0 <= x < grid_size[1]:
-                    history[0, y, x] += 1
+        history[0, np.clip(relevant_bounds[2], 0, grid_size[0]-1):np.clip(relevant_bounds[3]+1, 0, grid_size[0]),
+                   np.clip(relevant_bounds[0], 0, grid_size[1]-1):np.clip(relevant_bounds[1]+1, 0, grid_size[1])] += 1
+        # for y in range(relevant_bounds[2], np.min([relevant_bounds[3] + 1, grid_size[0]])):
+        #     for x in range(relevant_bounds[0], np.min([relevant_bounds[1] + 1, grid_size[1]])):
+        #         # if 0 <= y < grid_size[0] and 0 <= x < grid_size[1]:
+        #             history[0, y, x] += 1
     return history
 
 
@@ -39,7 +41,7 @@ def get_stable_cells(history: np.ndarray, threshold: int) -> np.ndarray:
 
 
 
-def get_stable_boxes(history: np.ndarray, threshold: int) -> list[list[int]]:  # todo test
+def get_stable_islands(history: np.ndarray, threshold: int) -> list[list[int]]:  # todo test
     """Returns the bounding boxes of the stable cells."""
     # do island detection to group adjacent cells and return a single box for each group
     stable_cells = get_stable_cells(history, threshold)
@@ -68,6 +70,25 @@ def get_stable_boxes(history: np.ndarray, threshold: int) -> list[list[int]]:  #
     return boxes
 
 
+def is_box_within_stable_cell(box: list[int], stable_cells: np.ndarray) -> bool:
+    """ Returns True if the box is within any of the stable cells. """
+    x1, y1, x2, y2 = box
+    relevant_grid_bounds = np.round(np.array([x1, x2, y1, y2]) / 10).astype(int)
+    if np.any(stable_cells[relevant_grid_bounds[2]:relevant_grid_bounds[3]+1, relevant_grid_bounds[0]:relevant_grid_bounds[1]+1]):  
+        return True
+    return False
+
+
+def get_stable_boxes(history: np.ndarray, current_frame_boxes: list[list[int]], threshold: int) -> list[list[int]]:
+    """ Returns the boxes from the current frame that should be considered as fan candidates since they are in stable areas. """
+    to_consider = get_stable_cells(history, threshold)
+    if not np.any(to_consider): return []
+    stable_boxes = []
+    for box in current_frame_boxes:
+        if is_box_within_stable_cell(box, to_consider):
+            stable_boxes.append(box)
+    return stable_boxes
+
 
 if __name__ == "__main__":
     history = init_stabilizer(config.STABILIZER_N_FRAMES)
@@ -79,5 +100,5 @@ if __name__ == "__main__":
         y2 = np.random.randint(0, config.OPTICAL_H)
         boxes = [[x1, y1, min(x1 + 100, config.OPTICAL_W), min(y1 + 100, config.OPTICAL_H)], [x2, y2, min(x2 + 100, config.OPTICAL_W), min(y2 + 100, config.OPTICAL_H)]]
         history = update_buffer(history, boxes)
-    stable = get_stable_cells(history, config.STABILIZER_M_FRAMES)
+    stable = get_stable_boxes(history, boxes, config.STABILIZER_M_FRAMES)
     print(stable)
