@@ -1,6 +1,4 @@
 import os
-
-
 import config
 from stabilizer import init_stabilizer, update_buffer, get_stable_boxes
 from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_gesture, is_exit_sequence
@@ -43,21 +41,21 @@ def main():
     # main loop:
     while True:
         # capture image
-        frame, d_state = capture_frame(d_state)
+        frame_bgr, frame_rgb, d_state = capture_frame(d_state)
 
         # detection + stabilization
-        detected_boxes, detected_centers, annotated_frame, d_state = detect_people(frame, state=d_state, return_annotated=True)
+        detected_boxes, detected_centers, annotated_frame, d_state = detect_people(frame_bgr, state=d_state, return_annotated=True)
         d_state['history'] = update_buffer(d_state['history'], detected_boxes)
         boxes_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
 
         # for each box, run the blocks that acquire data to build "heat score"
         for box in boxes_to_consider:
-            is_wave = s_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame)
+            is_wave = s_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb)
             temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
             print(f"Max temp in box {box}: {temp}")
 
 
-        if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame) :  # define your own break condition
+        if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
             break
 
         # for res in yolo_res:
