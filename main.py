@@ -5,7 +5,7 @@ from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_ge
 from optical_camera.capture_frame_cv2 import capture_frame, init_camera
 from optical_camera.YOLO_detect_ppl import detect_people
 from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
-from AI.brainless import init_brain_state, propagate_priority
+from AI.brainless import get_implement_commands, init_brain_state, propagate_priority, switch_target
 from HW_control.fan_control import set_fan_speed, set_servo_angle, Speed
 
 
@@ -47,15 +47,15 @@ def main():
     # main loop:
     while True:
         try:
-            # capture image
+            # (1) capture image
             frame_bgr, frame_rgb, d_state = capture_frame(d_state)
 
-            # detection + stabilization
+            # (2) detection + stabilization of ppl 
             detected_boxes, detected_centers, annotated_frame, d_state = detect_people(frame_bgr, state=d_state, return_annotated=True)
             d_state['history'] = update_buffer(d_state['history'], detected_boxes)
             boxes_to_consider, centers_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
 
-            # for each box, run the blocks that acquire data to build "heat score"
+            # (3) for each box, run the blocks that acquire data to build "heat score"
             is_wave_list = []
             max_temp_list = []
             for box in boxes_to_consider:
@@ -73,16 +73,19 @@ def main():
                 'is_wave': is_wave_list,
                 'max_temp': max_temp_list
             }
-
+            
+            # (4) AI brain to decide commands
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
                 # TODO: ADD here graceful shutdown of HW
                 print("Exit sequence detected. Exiting...")
                 break
 
-            # decide if there was a change in the scene, if not - continue to next iteration
-            # change: num boxes changed, top of queue lost score
-            # update priority queue 
-            # call controller
+            d_state = propagate_priority(d_targets, d_state)
+            d_state = switch_target(d_targets, d_state)
+            d_commands = get_implement_commands(d_targets, d_state)
+            print(d_commands)
+
+            # call controller w commands 
 
 
         except Exception as e:
