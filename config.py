@@ -36,7 +36,7 @@ OPTICAL_INIT_CAM_WARMUP = 2
 OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH = 5
 
 # PPL detection YOLO
-OPTICAL_YOLO_WH = 320  # width/height for YOLO model input size
+OPTICAL_YOLO_WH = 640  # width/height for YOLO model input size
 OPTICAL_YOLO_MODEL = "yolo11n.pt"  
 OPTICAL_IS_PERSON_YOLO_THR = 0.5  # confidence threshold for person detection
 
@@ -50,3 +50,13 @@ OPTICAL_IS_PERSON_YOLO_THR = 0.5  # confidence threshold for person detection
 # ================================================
 STABILIZER_N_FRAMES = 50  # number of frames to consider
 STABILIZER_M_FRAMES = 10  # number of frames to trigger action
+
+
+# ================================================
+# Brain Module Parameters
+# ================================================
+serve_time = 4
+fullSwingTime = 1 # Full swing time for fan movement (seconds)
+Num_of_bins = 100
+target_dist_bin = 7
+target_clustering_mins = 2

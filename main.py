@@ -5,6 +5,8 @@ from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_ge
 from optical_camera.capture_frame_cv2 import capture_frame, init_camera
 from optical_camera.YOLO_detect_ppl import detect_people
 from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
+from AI.brainless import init_brain_state, propagate_priority
+from HW_control.fan_control import set_fan_speed, set_servo_angle, Speed
 
 
 def init(d_state: dict = None):
@@ -21,6 +23,7 @@ def init(d_state: dict = None):
         'failed_capture_counter': 0
     }
     init_camera(d_state)
+    d_state = init_brain_state(config, d_state=d_state)
     return d_state
     
 
@@ -53,15 +56,26 @@ def main():
             boxes_to_consider, centers_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
 
             # for each box, run the blocks that acquire data to build "heat score"
+            is_wave_list = []
+            max_temp_list = []
             for box in boxes_to_consider:
                 x1, y1, x2, y2 = box
                 # crop frame for gesture recognition
                 framed_frame = frame_rgb[y1:y2, x1:x2]
                 is_wave = is_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=framed_frame)
                 max_temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
-                # calc score per box and add to list
+                is_wave_list.append(is_wave)
+                max_temp_list.append(max_temp)
+            
+            d_targets = {
+                'boxes': boxes_to_consider,
+                'centers': centers_to_consider,
+                'is_wave': is_wave_list,
+                'max_temp': max_temp_list
+            }
 
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
+                # TODO: ADD here graceful shutdown of HW
                 print("Exit sequence detected. Exiting...")
                 break
 
