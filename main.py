@@ -50,7 +50,7 @@ def main():
 
         # for each box, run the blocks that acquire data to build "heat score"
         for box in boxes_to_consider:
-            is_wave = s_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb)
+            is_wave = is_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb)
             temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
             print(f"Max temp in box {box}: {temp}")
 

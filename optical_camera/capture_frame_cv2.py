@@ -45,7 +45,7 @@ def capture_frame(d_state, verbose=False, flag_debug_save_image=False):
         time.sleep(2)
 
         # Capture frame (RGB by default)
-        frame_rgb = picam2.capture_array()
+        frame_bgr = picam2.capture_array()
         picam2.close()
 
     except Exception as e:
@@ -56,7 +56,7 @@ def capture_frame(d_state, verbose=False, flag_debug_save_image=False):
         return None, None, d_state
 
     # Convert to BGR (YOLO/OpenCV style)
-    frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+    frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
     # Reset failure counter on success
     d_state['failed_capture_counter'] = 0
