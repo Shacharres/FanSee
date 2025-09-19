@@ -43,34 +43,41 @@ def main():
     d_state = init()
     # main loop:
     while True:
-        # capture image
-        frame_bgr, frame_rgb, d_state = capture_frame(d_state)
+        try:
+            # capture image
+            frame_bgr, frame_rgb, d_state = capture_frame(d_state)
 
         # detection + stabilization
         detected_boxes, detected_centers, annotated_frame, d_state = detect_people(frame_bgr, state=d_state, return_annotated=True)
         d_state['history'] = update_buffer(d_state['history'], detected_boxes)
         boxes_to_consider, centers_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
 
-        # for each box, run the blocks that acquire data to build "heat score"
-        for box in boxes_to_consider:
-            is_wave = is_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb)
-            temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
-            print(f"Max temp in box {box}: {temp}")
+            # for each box, run the blocks that acquire data to build "heat score"
+            for box in boxes_to_consider:
+                x1, y1, x2, y2 = box
+                # crop frame for gesture recognition
+                framed_frame = frame_rgb[y1:y2, x1:x2]
+                is_wave = is_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=framed_frame)
+                max_temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
+                # calc score per box and add to list
+
+            if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
+                print("Exit sequence detected. Exiting...")
+                break
+
+            # decide if there was a change in the scene, if not - continue to next iteration
+            # change: num boxes changed, top of queue lost score
+            # update priority queue 
+            # call controller
 
 
-        if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
-            break
+        except Exception as e:
+            print(f"Error occurred: {e}")
 
-        # for res in yolo_res:
-        #     box = res.box.xyxy[0].cpu().numpy()  # x1,y1,x2,y2
-        #     temp = get_max_temp(thermal_camera, box, (config.OPTICAL_W, config.OPTICAL_H))
-        #     conf = res.conf
-        #     cls = res.cls
-    #   calc metrics
-    #   fan control
+        finally:
+            # cleanup
+            cleanup(d_state)
     
-    # cleanup
-    cleanup(d_state)
 
 
 if __name__ == "__main__":
