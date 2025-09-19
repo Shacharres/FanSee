@@ -2,7 +2,7 @@ import os
 import config
 from stabilizer import init_stabilizer, update_buffer, get_stable_boxes
 from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_gesture, is_exit_sequence
-from optical_camera.capture_frame_cv2 import capture_frame
+from optical_camera.capture_frame_cv2 import capture_frame, init_camera
 from optical_camera.YOLO_detect_ppl import detect_people
 from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
 
@@ -16,8 +16,11 @@ def init(d_state: dict = None):
         'gestures_recognizer': recognizer,
         'gesture_history': gesture_history,
         'thermal_camera': init_thermal_camera(config.THERMAL_FRAME_RATE, (config.THERMAL_H, config.THERMAL_W)),
-        'history': init_stabilizer(config.STABILIZER_N_FRAMES)
+        'history': init_stabilizer(config.STABILIZER_N_FRAMES),
+        'picam': None,
+        'failed_capture_counter': 0
     }
+    init_camera(d_state)
     return d_state
     
 
