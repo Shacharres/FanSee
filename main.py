@@ -50,7 +50,7 @@ def main():
             # detection + stabilization
             detected_boxes, detected_centers, annotated_frame, d_state = detect_people(frame_bgr, state=d_state, return_annotated=True)
             d_state['history'] = update_buffer(d_state['history'], detected_boxes)
-            boxes_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
+            boxes_to_consider, centers_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
 
             # for each box, run the blocks that acquire data to build "heat score"
             for box in boxes_to_consider:
