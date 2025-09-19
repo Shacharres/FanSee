@@ -23,48 +23,67 @@ import time
 import cv2
 
 
+
+def init_camera(d_state: dict = None):
+    """
+    Initialize PiCamera2 with retries until max failure threshold is reached.
+    Updates d_state:
+      - Stores 'picam' object on success
+      - Increments failed_capture_counter on failure
+      - Raises RuntimeError if threshold exceeded
+    """
+    if d_state is None:
+        d_state = {}
+
+    picam2 = None
+    while picam2 is None and d_state.get('failed_capture_counter', 0) < config.OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH:
+        try:
+            picam2 = Picamera2()
+            camera_config = picam2.create_still_configuration(
+                main={"size": (config.OPTICAL_W, config.OPTICAL_H)}
+            )
+            picam2.configure(camera_config)
+            picam2.start()
+            time.sleep(config.OPTICAL_INIT_CAM_WARMUP)  # allow camera to warm up
+
+        except Exception as e:
+            d_state['failed_capture_counter'] = d_state.get('failed_capture_counter', 0) + 1
+            if d_state['failed_capture_counter'] >= config.OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH:
+                raise RuntimeError(f"Camera init failed too many times: {e}")
+
+    d_state['picam'] = picam2
+    return d_state
+
+
 def capture_frame(d_state, verbose=False, flag_debug_save_image=False):
     """
-    Captures a single frame from the PiCamera2.
+    Captures a frame with retries until max failure threshold is reached.
     Updates d_state:
-      - Increments on failure
-      - Resets on success
-      - Crashes if counter exceeds threshold
+      - Increments failed_capture_counter on failure
+      - Resets failed_capture_counter on success
+      - Raises RuntimeError if threshold exceeded
     Returns:
-      (frame_bgr, d_state)
-      - frame_bgr: np.ndarray (BGR, OpenCV style), or None on failure
-      - d_state: updated dict
+      (frame_bgr, frame_rgb, d_state)
     """
-    try:
-        picam2 = Picamera2()
-        camera_config = picam2.create_still_configuration(
-            main={"size": (config.OPTICAL_W, config.OPTICAL_H)}
-        )
-        picam2.configure(camera_config)
-        picam2.start()
-        time.sleep(2)
+    frame_bgr, frame_rgb = None, None
 
-        # Capture frame (RGB by default)
-        frame_bgr = picam2.capture_array()
-        picam2.close()
+    while frame_bgr is None and d_state['failed_capture_counter'] < config.OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH:
+        try:
+            frame_bgr = d_state['picam'].capture_array()
+            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
-    except Exception as e:
-        # Handle failure to open or capture
-        d_state['failed_capture_counter'] = d_state.get('failed_capture_counter', 0) + 1
-        if d_state['failed_capture_counter'] > config.OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH:
-            raise RuntimeError(f"Camera capture failed too many times: {e}")
-        return None, None, d_state
+            # reset failure counter on success
+            d_state['failed_capture_counter'] = 0
 
-    # Convert to BGR (YOLO/OpenCV style)
-    frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        except Exception as e:
+            d_state['failed_capture_counter'] += 1
+            if d_state['failed_capture_counter'] >= config.OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH:
+                raise RuntimeError(f"Camera capture failed too many times: {e}")
 
-    # Reset failure counter on success
-    d_state['failed_capture_counter'] = 0
-
-    if verbose:
+    if verbose and frame_bgr is not None:
         print("Captured frame shape:", frame_bgr.shape)
 
-    if flag_debug_save_image:
+    if flag_debug_save_image and frame_rgb is not None:
         cv2.imwrite("captured_frame.jpg", frame_rgb)
         print("Picture saved as captured_frame.jpg")
 

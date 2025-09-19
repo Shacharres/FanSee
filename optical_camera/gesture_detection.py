@@ -31,7 +31,10 @@ def get_gesture_prediction(recognizer: vision.GestureRecognizer, history: list, 
     else:
         image = mp.Image.create_from_file(image_path)
     recognition_result = recognizer.recognize(image)
-    top_gesture = recognition_result.gestures[0][0]
+    if not recognition_result or not recognition_result.gestures:
+        top_gesture = {'category_name': 'None', 'score': -1}
+    else:
+        top_gesture = recognition_result.gestures[0][0]
     history = [top_gesture.category_name] + history[:-1]  # update history
     return top_gesture.category_name, top_gesture.score
 
