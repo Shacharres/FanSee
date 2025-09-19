@@ -1,8 +1,22 @@
-# =================== 1st ===================
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-# =================== 1st ===================
+# ============================================================
+# bootstrap repo root before other imports
+import subprocess, sys, os
+from pathlib import Path
+
+def add_git_root_to_path():
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            stderr=subprocess.DEVNULL
+        )
+        git_root = Path(out.decode("utf-8").strip())
+        sys.path.insert(0, str(git_root))
+        return git_root
+    except Exception:
+        raise RuntimeError("Not inside a Git repository")
+
+add_git_root_to_path()
+# ============================================================
 from ultralytics import YOLO
 from utils import get_center_pixels
 import cv2

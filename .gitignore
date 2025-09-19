@@ -1,2 +1,4 @@
 venv/
 MSvenv/
+__pycache__/
+*.pyc
