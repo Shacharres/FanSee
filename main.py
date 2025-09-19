@@ -28,15 +28,20 @@ def init(d_state: dict = None):
     
 
 def cleanup(d_state):
-    if 'cap' in d_state.keys():
+    # optical camera
+    if 'picam' in d_state.keys():
         try:
-            d_state['cap'].release()
+            d_state['picam'].close()
         except Exception as e:
             print(f"Error cleaning up optical camera: {e}")
+    # thermal camera
     try:
         d_state['thermal_camera'].exit()
     except Exception as e:
         print(f"Error cleaning up thermal camera: {e}")
+    # fan
+    set_fan_speed(Speed.OFF)
+
     d_state['isInitalized'] = False
     print("Cleanup successful.")
 
@@ -76,7 +81,7 @@ def main():
             
             # (4) AI brain to decide commands
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
-                # TODO: ADD here graceful shutdown of HW
+                # TODO: ADD here graceful shutdown of HW   ---- not needed - handled in cleanup()
                 print("Exit sequence detected. Exiting...")
                 break
 
@@ -92,7 +97,7 @@ def main():
             print(f"Error occurred: {e}")
 
         finally:
-            # cleanup
+            # cleanup and HW studown
             cleanup(d_state)
     
 
