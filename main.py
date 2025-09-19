@@ -11,6 +11,7 @@ from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
 gestures_recognizer = None
 thermal_camera = None
 history = None
+dState = dict()
 
 
 def init():
@@ -18,18 +19,23 @@ def init():
     gestures_recognizer = init_gesture_recognizer(model_path)
     thermal_camera = init_thermal_camera(config.THERMAL_FRAME_RATE, (config.THERMAL_H, config.THERMAL_W))
     history = init_stabilizer(config.STABILIZER_N_FRAMES)
+    dState['isInitalized'] = True
+
+    return dState
+    
 
 
 def main():
     # init HW
-    init()
+    dState = init()
     # main loop:
     while True:
         break
         # capture image
-        frame = capture_frame()
+        frame = capture_frame_cv2()
 
         # detection + tracking
+        detected_boxes, detected_centers, annotated_frame, dState = detect_people(frame, state=dState, return_annotated=True)
         yolo_res = None
         detected_boxes = [r.box.xyxy[0].cpu().numpy() for r in yolo_res if r.cls == 0 and r.conf > config.OPTICAL_IS_PERSON_YOLO_THR]  # only persons
         updated_history = update_buffer(history, detected_boxes)
