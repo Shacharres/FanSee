@@ -6,10 +6,10 @@ Thresholds and other constants.
 # ================================================
 # Fan and fan servo 
 # ================================================
-FAN_SPEED_1_PIN = 1
-FAN_SPEED_2_PIN = 2
-FAN_SPEED_3_PIN = 3
-FAN_MIST_PIN = 4
+FAN_SPEED_1_PIN = 24
+FAN_SPEED_2_PIN = 23
+FAN_SPEED_3_PIN = 22
+FAN_MIST_PIN = 27
 FAN_SERVO_PIN = 17
 
 # ================================================
