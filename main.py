@@ -97,7 +97,7 @@ def main():
             print(d_commands)
 
             # call controller w commands 
-
+            # process_target(target: dict)
         except Exception as e:
             print(f"Error occurred: {e}; {traceback.format_exc()}")
             break

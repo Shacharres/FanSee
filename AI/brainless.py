@@ -173,15 +173,18 @@ def get_implement_commands(d_targets, d_state):
         prt_bin = priority_bins[idx] if idx < len(priority_bins) else 0
         prt_temp = max_temps[idx] if idx < len(max_temps) else 0
         fan_speed = 1 # TODO: assign it in smart way (dist?)
+        mist_enable = False # TODO: assign it in smart way 
         return {'x_pixel': x_pixel, 
                 'fan_speed': fan_speed,
                 'prt_bin': prt_bin,
-                'prt_temp': prt_temp}
+                'prt_temp': prt_temp,
+                'mist_enable': mist_enable}
     else:
         return {'x_pixel': 0, 
                 'fan_speed': 1, 
                 'prt_bin': 0,
-                'prt_temp': 0}
+                'prt_temp': 0,
+                'mist_enable': False}
 
 # =========================
 # Example usage
