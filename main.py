@@ -3,13 +3,13 @@ import config
 import traceback
 
 from stabilizer import init_stabilizer, update_buffer, get_stable_boxes
-from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_gesture, is_exit_sequence
+from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_gesture, is_exit_sequence, gesture_to_change_fan_speed
 from optical_camera.capture_frame_cv2 import capture_frame, init_camera
-from optical_camera.YOLO_detect_ppl import detect_people
+from optical_camera.YOLO_detect_ppl import detect_people_and_ties
 from optical_camera.detect_distance import init_distance_detector, detect_distance
 from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
 from AI.brainless import get_implement_commands, init_brain_state, propagate_priority, switch_target
-from HW_control.fan_control import set_fan_speed, Speed, apply_target_control
+from HW_control.fan_control import set_fan_speed, Speed, apply_target_control, set_servo_from_pixel
 
 
 def init(d_state: dict = None):
@@ -51,6 +51,54 @@ def cleanup(d_state):
     print("Cleanup successful.")
 
 
+def premium_flow_single_iteration(d_state, tie_box, frame_rgb):
+
+    tie_loc_x1, tie_loc_y1, tie_loc_x2, tie_loc_y2 = map(int, tie_box.xyxy[0])
+    tie_center = tie_loc_x1//2 + tie_loc_x2//2
+
+    # detect gesture for changing fan speed
+    speed_change_instruction, speed_change_value = gesture_to_change_fan_speed(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb)
+
+    # move fan and change speed
+    set_servo_from_pixel(tie_center)
+    d_state = set_fan_speed(None, speed_change_value, d_state)
+    return d_state
+
+
+def reg_flow_single_iteration(d_state, detected_boxes, frame_rgb):
+    boxes_to_consider, centers_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
+
+    # (3) for each box, run the blocks that acquire data to build "heat score"
+    is_wave_list, max_temp_list, depth_list = [], [], []
+
+    for box in boxes_to_consider:
+        x1, y1, x2, y2 = box
+        # crop frame for gesture recognition
+        framed_frame = frame_rgb[y1:y2, x1:x2]
+        is_wave = is_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=framed_frame)
+        depth = detect_distance(d_state['distance_detector'], framed_frame)
+        max_temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
+        
+        depth_list.append(depth)
+        is_wave_list.append(is_wave)
+        max_temp_list.append(max_temp)
+    
+    d_targets = {
+        'boxes': boxes_to_consider,
+        'centers': centers_to_consider,
+        'is_wave': is_wave_list,
+        'max_temp': max_temp_list,
+        'depth': depth_list
+    }
+
+    # depth - controls fan speed, add boundaries
+    # choose box based on heat + gesture
+    # if no box, servo to mid, fan off
+    # move servo to center of chosen box, set fan speed based on max temp
+
+    return d_state
+
+
 def main():
     # init HW
     d_state = init()
@@ -64,45 +112,22 @@ def main():
             frame_bgr, frame_rgb, d_state = capture_frame(d_state)
 
             # (2) detection + stabilization of ppl 
-            detected_boxes, detected_centers, annotated_frame, d_state = detect_people(frame_bgr, state=d_state, return_annotated=True)
+            detected_boxes, detected_centers, annotated_frame, d_state, tie_detected = detect_people_and_ties(frame_bgr, state=d_state, return_annotated=True)
             d_state['history'] = update_buffer(d_state['history'], detected_boxes)
-            boxes_to_consider, centers_to_consider = get_stable_boxes(d_state['history'], detected_boxes, config.STABILIZER_M_FRAMES)
 
-            # (3) for each box, run the blocks that acquire data to build "heat score"
-            is_wave_list, max_temp_list, depth_list = [], [], []
-    
-            for box in boxes_to_consider:
-                x1, y1, x2, y2 = box
-                # crop frame for gesture recognition
-                framed_frame = frame_rgb[y1:y2, x1:x2]
-                is_wave = is_wave_gesture(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=framed_frame)
-                depth = detect_distance(d_state['distance_detector'], framed_frame)
-                max_temp = get_max_temp(d_state['thermal_camera'], box, (config.OPTICAL_W, config.OPTICAL_H))
-                
-                depth_list.append(depth)
-                is_wave_list.append(is_wave)
-                max_temp_list.append(max_temp)
-            
-            d_targets = {
-                'boxes': boxes_to_consider,
-                'centers': centers_to_consider,
-                'is_wave': is_wave_list,
-                'max_temp': max_temp_list,
-                'depth': depth_list
-            }
-            
+            if tie_detected:
+                print("Tie detected, switching to premium flow")
+                d_state = premium_flow_single_iteration(d_state, detected_boxes, frame_rgb)
+            else:
+                d_state = reg_flow_single_iteration(d_state, detected_boxes, frame_rgb)
+
+
             # (4) AI brain to decide commands
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
                 print("Exit sequence detected. Exiting...")
                 break
 
-            d_state = propagate_priority(d_targets, d_state)
-            d_state = switch_target(d_targets, d_state)
-            d_commands = get_implement_commands(d_targets, d_state)
-            print(d_commands)
 
-            # call controller w commands 
-            apply_target_control(target = d_commands)
         except Exception as e:
             print(f"Error occurred: {e}; {traceback.format_exc()}")
             break

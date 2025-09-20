@@ -83,12 +83,21 @@ def set_servo_from_pixel(x_pixel):
     )
     servo.pulse_width = servo_pulse_len
 
-def set_fan_speed(speed):
+
+def set_fan_speed(speed = None, relative_speed: int = None, state: dict = {}):
+    if speed is None:  # want to change the current speed relatively
+        speed = state.get('current_fan_speed', Speed.STOP)
+        speed = Speed(min(max(speed.value + (relative_speed if relative_speed else 0), Speed.STOP.value), Speed.HIGH.value))
+    
     if isinstance(speed, Speed):
         speed = speed.value
+
     relay_speed1.off() if speed > Speed.STOP.value else relay_speed1.on()
     relay_speed2.off() if speed > Speed.LOW.value else relay_speed2.on()
     relay_speed3.off() if speed > Speed.MIDDLE.value else relay_speed3.on()
+    state['current_fan_speed'] = speed # store current speed in state for reference
+    return state
+
 
 def set_mist(mist_enable: bool):
     relay_mist.off() if mist_enable else relay_mist.on()
