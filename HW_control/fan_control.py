@@ -29,8 +29,8 @@ class Speed(Enum):
     HIGH = 4
 
 # ================= CONSTS =================
-SERVO_MAX_PULSE_LEFT = 0.002
-SERVO_MIN_PULSE_RIGHT = 0.0014
+SERVO_MAX_PULSE_LEFT = 0.0014
+SERVO_MIN_PULSE_RIGHT = 0.0022
 SERVO_PULSE_MID = 0.0016
 
 # ================= INITIALIZE HARDWARE =================

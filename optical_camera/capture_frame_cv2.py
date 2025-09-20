@@ -85,7 +85,7 @@ def capture_frame(d_state, verbose=False, flag_debug_save_image=False):
 
     if flag_debug_save_image and frame_rgb is not None:
         cv2.imwrite("captured_frame_MS.jpg", frame_rgb)
-        print("Picture saved as captured_frame1800.jpg")
+        print("Picture saved as captured_frame.jpg")
 
     return frame_bgr, frame_rgb, d_state
 
