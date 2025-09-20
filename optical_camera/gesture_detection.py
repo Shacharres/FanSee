@@ -41,6 +41,17 @@ def get_gesture_prediction(recognizer: vision.GestureRecognizer, history: list, 
         return top_gesture.category_name, top_gesture.score
 
 
+def gesture_to_change_fan_speed(recognizer: vision.GestureRecognizer, history: list, image_path: str = None, image_matrix=None, conf_threshold: float = 0.5):
+    gesture_name, score = get_gesture_prediction(recognizer, history, image_path=image_path, image_matrix=image_matrix)
+    if gesture_name == "Thumb_Up" and score > conf_threshold:
+        return "increase_speed", 1
+    elif gesture_name == "Thumb_Down" and score > conf_threshold:
+        return "decrease_speed", -1
+    else:
+        return "no_change", 0
+
+
+
 def is_wave_gesture(recognizer: vision.GestureRecognizer, history: list, image_path: str = None, image_matrix=None, conf_threshold: float = 0.5) -> bool: # type: ignore
     """Checks if the gesture in the image is a wave gesture."""
     gesture_name, score = get_gesture_prediction(recognizer, history, image_path=image_path, image_matrix=image_matrix)
