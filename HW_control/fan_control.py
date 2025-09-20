@@ -29,9 +29,14 @@ class Speed(Enum):
     HIGH = 4
 
 # ================= CONSTS =================
-SERVO_MAX_PULSE_LEFT = 0.0016
+SERVO_MAX_PULSE_LEFT = 0.0012
 SERVO_MIN_PULSE_RIGHT = 0.0022
 SERVO_PULSE_MID = 0.0016
+PIXEL_OFFSET = config.OPTICAL_W/10
+INTRP_RESULTION = 3280
+INTRP_PIX_LIST = [60,1090,1940,3600]
+INTRP_PWM_LIST = [2000,1800,1600,1400]
+
 
 # ================= INITIALIZE HARDWARE =================
 relay_speed1 = OutputDevice(config.FAN_SPEED_1_PIN)
@@ -72,9 +77,9 @@ def set_servo_from_pixel(x_pixel):
     # Map normalized value to servo pulse
     servo_pulse_len = interpolate_three(
         norm_val,
-        -1, SERVO_MIN_PULSE_RIGHT,
+        -0.9, SERVO_MIN_PULSE_RIGHT,
          0, SERVO_PULSE_MID,
-         1, SERVO_MAX_PULSE_LEFT
+         0.9, SERVO_MAX_PULSE_LEFT
     )
     servo.pulse_width = servo_pulse_len
 
@@ -100,7 +105,7 @@ def apply_target_control(target: dict):
         'mist_enable': bool
     }
     """
-    x_pixel = target.get('x_pixel', config.OPTICAL_W // 2)
+    x_pixel = target.get('x_pixel', config.OPTICAL_W / 2)
     fan_speed = target.get('fan_speed', Speed.STOP)
     mist_enable = target.get('mist_enable', False)
 
@@ -118,8 +123,9 @@ def apply_target_control(target: dict):
 
 # ================= TEST / MAIN LOOP =================
 if __name__ == "__main__":
-    set_servo_from_pixel(config.OPTICAL_W)  # center
-    set_fan_speed(Speed.HIGH)
+    # set_servo_from_pixel(config.OPTICAL_W)  # center
+    set_servo_from_pixel(0)  # center
+    set_fan_speed(Speed.LOW)
     set_mist(False)
     
     # Example usage
