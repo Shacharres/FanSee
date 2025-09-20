@@ -23,10 +23,10 @@ import config
 from enum import Enum
 
 class Speed(Enum):
-    STOP = 1
-    LOW = 2
-    MIDDLE = 3
-    HIGH = 4
+    STOP = 0
+    LOW = 1
+    MIDDLE = 2
+    HIGH = 3
 
 # ================= CONSTS =================
 SERVO_MAX_PULSE_LEFT = 0.0012
@@ -85,16 +85,34 @@ def set_servo_from_pixel(x_pixel):
 
 
 def set_fan_speed(speed = None, relative_speed: int = None, state: dict = {}):
+    print(speed, relative_speed, state.get('current_fan_speed', Speed.STOP.value))
     if speed is None:  # want to change the current speed relatively
-        speed = state.get('current_fan_speed', Speed.STOP)
-        speed = Speed(min(max(speed.value + (relative_speed if relative_speed else 0), Speed.STOP.value), Speed.HIGH.value))
+        speed = state.get('current_fan_speed', Speed.STOP.value)
+        speed = Speed(min(max(speed + (relative_speed if relative_speed else 0), Speed.STOP.value), Speed.HIGH.value))
     
     if isinstance(speed, Speed):
         speed = speed.value
 
-    relay_speed1.off() if speed > Speed.STOP.value else relay_speed1.on()
-    relay_speed2.off() if speed > Speed.LOW.value else relay_speed2.on()
-    relay_speed3.off() if speed > Speed.MIDDLE.value else relay_speed3.on()
+    if speed == Speed.STOP.value:
+        print("Fan OFF")
+        relay_speed1.on()
+    elif speed == Speed.LOW.value:
+        print("Fan LOW")
+        relay_speed1.off()
+        relay_speed2.on()
+    elif speed == Speed.MIDDLE.value:
+        print("Fan MIDDLE")
+        relay_speed1.off()
+        relay_speed2.off()
+        relay_speed3.on()
+    elif speed == Speed.HIGH.value:
+        print("Fan HIGH")
+        relay_speed1.off()
+        relay_speed2.off()
+        relay_speed3.off()
+    else:
+        raise ValueError("Invalid speed value")
+
     state['current_fan_speed'] = speed # store current speed in state for reference
     return state
 

@@ -52,16 +52,39 @@ def cleanup(d_state):
 
 
 def premium_flow_single_iteration(d_state, tie_box, frame_rgb):
-
-    tie_loc_x1, tie_loc_y1, tie_loc_x2, tie_loc_y2 = map(int, tie_box.xyxy[0])
+    tie_loc_x1, tie_loc_y1, tie_loc_x2, tie_loc_y2 = tie_box
     tie_center = tie_loc_x1//2 + tie_loc_x2//2
-
+    # x1, y1, x2, y2 = (  max(0, tie_loc_x1-350), 
+    #                     max(0, tie_loc_y1-350), 
+    #                     min(config.OPTICAL_W, tie_loc_x2+350), 
+    #                     min(config.OPTICAL_H, tie_loc_y2+350))
     # detect gesture for changing fan speed
-    speed_change_instruction, speed_change_value = gesture_to_change_fan_speed(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb)
+    # speed_change_instruction, speed_change_value = gesture_to_change_fan_speed(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb[y1:y2, x1:x2])
+
+    tie_box_area = (tie_loc_x2 - tie_loc_x1) * (tie_loc_y2 - tie_loc_y1)
+    print(f"Tie box area: {tie_box_area}")
+
+    config.TIE_AREA_THRESHOLD_LOW_VEL = 90918
+    config.TIE_AREA_THRESHOLD_MED_VEL = 70918
+    config.TIE_AREA_THRESHOLD_HIGH_VEL = 40918
+
+    if tie_box_area >= config.TIE_AREA_THRESHOLD_LOW_VEL:
+        desired_speed = Speed.LOW
+    elif tie_box_area < config.TIE_AREA_THRESHOLD_HIGH_VEL:
+        desired_speed = Speed.HIGH
+    else:
+        desired_speed = Speed.MIDDLE
+
+    # if tie_box_area < config.TIE_AREA_THRESHOLD_LOW_VEL:
+    #     speed_change_instruction, speed_change_value = "decrease_speed", -1
+    # elif tie_box_area > config.TIE_AREA_THRESHOLD_LOW:
+    #     speed_change_instruction, speed_change_value = "increase_speed", 1
+    # else:
+    #     speed_change_instruction, speed_change_value = "no_change", 0
 
     # move fan and change speed
     set_servo_from_pixel(tie_center)
-    d_state = set_fan_speed(None, speed_change_value, d_state)
+    d_state = set_fan_speed(desired_speed, None, d_state)
     return d_state
 
 
@@ -102,25 +125,23 @@ def reg_flow_single_iteration(d_state, detected_boxes, frame_rgb):
 def main():
     # init HW
     d_state = init()
-    print("after init")
     # main loop:
     while True:
         try:
             d_state['loop_counter'] += 1
-            print(f"Loop idx = {d_state['loop_counter']}")
             # (1) capture image
             frame_bgr, frame_rgb, d_state = capture_frame(d_state)
 
             # (2) detection + stabilization of ppl 
             detected_boxes, detected_centers, annotated_frame, d_state, tie_detected = detect_people_and_ties(frame_bgr, state=d_state, return_annotated=True)
+            
             d_state['history'] = update_buffer(d_state['history'], detected_boxes)
 
             if tie_detected:
                 print("Tie detected, switching to premium flow")
-                d_state = premium_flow_single_iteration(d_state, detected_boxes, frame_rgb)
+                d_state = premium_flow_single_iteration(d_state, detected_boxes[0], frame_rgb)
             else:
                 d_state = reg_flow_single_iteration(d_state, detected_boxes, frame_rgb)
-
 
             # (4) AI brain to decide commands
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition
