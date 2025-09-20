@@ -1,15 +1,17 @@
 import os
 import config
 import traceback
+import pygame
+
 
 from stabilizer import init_stabilizer, update_buffer, get_stable_boxes
 from optical_camera.gesture_detection import init_gesture_recognizer, is_wave_gesture, is_exit_sequence, gesture_to_change_fan_speed
 from optical_camera.capture_frame_cv2 import capture_frame, init_camera
-from optical_camera.YOLO_detect_ppl import detect_people_and_ties
+from optical_camera.YOLO_detect_ppl import detect_people_and_ties, toothbrush_detected
 from optical_camera.detect_distance import init_distance_detector, detect_distance
 from thermal_camera.adafruit_cam import init_thermal_camera, get_max_temp
 from AI.brainless import get_implement_commands, init_brain_state, propagate_priority, switch_target
-from HW_control.fan_control import set_fan_speed, Speed, apply_target_control, set_servo_from_pixel
+from HW_control.fan_control import set_fan_speed, Speed, set_mist, set_servo_from_pixel
 
 
 def init(d_state: dict = None):
@@ -28,6 +30,7 @@ def init(d_state: dict = None):
         'loop_counter': 0
     }
     init_camera(d_state)
+    pygame.mixer.init()
     d_state = init_brain_state(config, d_state=d_state)
     return d_state
     
@@ -85,6 +88,7 @@ def premium_flow_single_iteration(d_state, tie_box, frame_rgb):
     # move fan and change speed
     set_servo_from_pixel(tie_center)
     d_state = set_fan_speed(desired_speed, None, d_state)
+
     return d_state
 
 
@@ -142,6 +146,12 @@ def main():
                 d_state = premium_flow_single_iteration(d_state, detected_boxes[0], frame_rgb)
             else:
                 d_state = reg_flow_single_iteration(d_state, detected_boxes, frame_rgb)
+
+            if toothbrush_detected(frame_bgr):
+                print("toothbrush detected, setting mist on")
+                set_mist(True)
+            else:
+                set_mist(False)
 
             # (4) AI brain to decide commands
             if is_exit_sequence(d_state['gestures_recognizer'], d_state['gesture_history'], image_matrix=frame_rgb) :  # define your own break condition

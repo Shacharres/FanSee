@@ -88,5 +88,16 @@ def detect_people_and_ties(frame, state=None, return_annotated=False):
     centers = get_center_pixels(boxes)
 
     annotated_frame = results[0].plot() if return_annotated else None
-
+    # cv2.imshow("Live View", annotated_frame)
+    # cv2.waitKey(1) 
     return boxes, centers, annotated_frame, state, tie_detected
+
+
+def toothbrush_detected(frame):
+    results = model(frame, imgsz=config.OPTICAL_YOLO_WH, verbose=False)
+
+    for det in results[0].boxes:
+        cls_id = int(det.cls[0])       # class id
+        if cls_id == config.OPTICAL_YOLO_TOOTHBRUSH_ID and conf >= config.OPTICAL_IS_TOOTHBRUSH_YOLO_THR:
+            return True
+    return False
