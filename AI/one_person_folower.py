@@ -37,7 +37,6 @@ def is_fansee(boxes):
         if float(tie_box.conf[0] > config.OPTICAL_IS_TIE_YOLO_THR):
             # print(f"found tie at tie_conf: {tie_box.conf[0]}")
             tie_loc_x1, tie_loc_y1, tie_loc_x2, tie_loc_y2 = map(int, tie_box.xyxy[0])
-            x1, y1, x2, y2 = box
             print(f"tie loc: {tie_box.xyxy[0]}")
             for box in boxes:
                 if int(box.cls[0])  == 0:
@@ -47,7 +46,8 @@ def is_fansee(boxes):
                         tie_center = tie_loc_x1//2 + tie_loc_x2//2
                         set_servo_from_pixel(tie_center)
 
-model = YOLO(config.OPTICAL_YOLO_MODEL)
+model_path = os.path.join("/home/fansee/Documents/FanSee", config.OPTICAL_YOLO_MODEL)
+model = YOLO(model_path)
 print("finish loading")
 # Initialize camera
 picam2 = Picamera2()
