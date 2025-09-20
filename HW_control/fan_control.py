@@ -29,7 +29,7 @@ class Speed(Enum):
     HIGH = 4
 
 # ================= CONSTS =================
-SERVO_MAX_PULSE_LEFT = 0.0014
+SERVO_MAX_PULSE_LEFT = 0.0016
 SERVO_MIN_PULSE_RIGHT = 0.0022
 SERVO_PULSE_MID = 0.0016
 
@@ -118,8 +118,8 @@ def apply_target_control(target: dict):
 
 # ================= TEST / MAIN LOOP =================
 if __name__ == "__main__":
-    set_servo_from_pixel(320)  # center
-    set_fan_speed(Speed.STOP)
+    set_servo_from_pixel(config.OPTICAL_W)  # center
+    set_fan_speed(Speed.HIGH)
     set_mist(False)
     
     # Example usage
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         'mist_enable': True
     }
 
-    apply_target_control(target_example)
+    # apply_target_control(target_example)
     print("Servo pulse:", servo.pulse_width)
     
     while True:

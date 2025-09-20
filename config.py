@@ -42,6 +42,8 @@ OPTICAL_FAILED_CAPTURE_COUNTER_FOR_CRASH = 5
 OPTICAL_YOLO_WH = 640  # width/height for YOLO model input size
 OPTICAL_YOLO_MODEL = "yolo11n.pt"  
 OPTICAL_IS_PERSON_YOLO_THR = 0.5  # confidence threshold for person detection
+OPTICAL_YOLO_TIE_ID = 27
+OPTICAL_IS_TIE_YOLO_THR = 0.05
 
 # ================================================
 # Camera TOF
